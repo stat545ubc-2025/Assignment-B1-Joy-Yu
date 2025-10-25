@@ -3,6 +3,8 @@ title: "Assignment-B1-STAT545B"
 output: github_document
 ---
 
+## Function
+
 When working on the mini data analysis, since the dataset I used
 includes lots of data, I had to narrow down the range that I looked
 into. When deciding which subset to look into, the summary information
@@ -47,16 +49,18 @@ group_summary <- function(data, ...) {
         drop_na() %>%                   # drop rows with missing data
         group_by(...) %>%               # group by the input column(s)
         summarise(
-            n = n(),                    # calculate the row number
             # calculate the mean value for numeric columns
             across(where(is.numeric), ~mean(.x), .names="mean_{.col}"),
             # calculate the number of unique values for categorical columns
-            across(where(is.factor), ~n_distinct(.x), .names = "num_of_unique_{.col}")
+            across(where(is.factor), ~n_distinct(.x), .names = "num_of_unique_{.col}"),
+            n = n(),                    # calculate the row number
         )
     
     return(summary_info)
 }
 ```
+
+## Examples
 
 Below shows the examples of how to use the function with the dataset `penguins`. The first parameter
 is the data frame or table, and the others are the columns in the data.
@@ -82,6 +86,47 @@ return an error with a corresponding error message.
 
 ```{r, error=TRUE}
 summary_info = group_summary(penguins, spe, island)
+```
+
+The last example shows that if there is no other columns arguments specified, the function will
+apply the summarise to the whole table.
+
+```{r}
+print(group_summary(penguins), n=Inf, width=Inf)
+```
+
+# Test the Function
+
+Use `testthat` package to test the `group_summary` function.
+
+
+```{r}
+test_that("group_summary function works well for different kinds of input", {
+    # example 1:
+    penguins_removed_na <- penguins %>% drop_na()
+    answer <- tibble(
+        mean_bill_len = mean(penguins_removed_na$bill_len),
+        mean_bill_dep = mean(penguins_removed_na$bill_dep),
+        mean_flipper_len = mean(penguins_removed_na$flipper_len),
+        mean_body_mass = mean(penguins_removed_na$body_mass),
+        mean_year = mean(penguins_removed_na$year),
+        num_of_unique_species = length(unique(penguins_removed_na$species)),
+        num_of_unique_island = length(unique(penguins_removed_na$island)),
+        num_of_unique_sex = length(unique(penguins_removed_na$sex)),
+        n = nrow(penguins_removed_na)
+    )
+    print(answer, n=Inf, width=Inf)
+    expect_equal(group_summary(penguins), answer)
+
+    # example 2: test that the function runs into an error when the input is not
+    # a data frame or tibble
+    vec = c(1, 2, 3)
+    expect_error(group_summary(vec, species))
+
+    # example 3: test that the function runs into an error when the input column
+    # does not exist in the dataset
+    expect_error(group_summary(penguins, specie))
+})
 ```
 
 
