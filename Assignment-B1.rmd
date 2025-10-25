@@ -12,18 +12,45 @@ to have a summary function that can be used repeatedly.
 ```{r}
 # import libraries
 suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(rlang))
 suppressPackageStartupMessages(library(roxygen2))
 suppressPackageStartupMessages(library(testthat))
 ```
 
+Here's the function:
+
 ```{r}
+#' Summarise the dataset by group
+#' 
+#' For each group, calculate the number of rows, numeric columns' mean value
+#' and categorical columns' number of unique values
+#' 
+#' @param data dataset to summarise
+#' @param ... ellipses, column(s) to group by
+#' 
+#' @return the summary result
 group_summary <- function(data, ...) {
+
+    if (!is.data.frame(data)){
+        stop("Input must be a data frame or tibble.")
+    }
+
+    vars <- ensyms(...)                 # get the arguments as symbols
+    for (var in vars) {
+        # check if the arguments are columns in data
+        if (!(as_string(var) %in% names(data))) {
+            stop(paste("Column", as_string(var), "does NOT exist in the dataset"))
+        }
+    }
+
     summary_info <- data %>%
-        drop_na() %>%
-        group_by(...) %>%
+        drop_na() %>%                   # drop rows with missing data
+        group_by(...) %>%               # group by the input column(s)
         summarise(
-            n = n(),
+            n = n(),                    # calculate the row number
+            # calculate the mean value for numeric columns
             across(where(is.numeric), ~mean(.x), .names="mean_{.col}"),
+            # calculate the number of unique values for categorical columns
             across(where(is.factor), ~n_distinct(.x), .names = "num_of_unique_{.col}")
         )
     
@@ -31,10 +58,30 @@ group_summary <- function(data, ...) {
 }
 ```
 
-```{r}
-summary_info = group_summary(penguins, species)
+Below shows the examples of how to use the function with the dataset `penguins`. The first parameter
+is the data frame or table, and the others are the columns in the data.
 
+```{r, message=FALSE}
+summary_info = group_summary(penguins, species, island)
+
+# set n and width to Inf to show the full result
 print(summary_info, n = Inf, width = Inf)
+```
+
+The following example shows that if the first input argument is not a data frame, the function will
+return an error with an error message.
+
+```{r, error=TRUE}
+penguin = c(1, 2, 3)
+
+summary_info = group_summary(penguin, spe)
+```
+
+The third example shows if the input column doesn't exist in the dataset, the function will
+return an error with a corresponding error message.
+
+```{r, error=TRUE}
+summary_info = group_summary(penguins, spe, island)
 ```
 
 
