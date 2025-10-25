@@ -1,0 +1,40 @@
+---
+title: "Assignment-B1-STAT545B"
+output: github_document
+---
+
+When working on the mini data analysis, since the dataset I used
+includes lots of data, I had to narrow down the range that I looked
+into. When deciding which subset to look into, the summary information
+of different groups is a key factor. Thus, I think it would be helpful
+to have a summary function that can be used repeatedly.
+
+```{r}
+# import libraries
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(roxygen2))
+suppressPackageStartupMessages(library(testthat))
+```
+
+```{r}
+group_summary <- function(data, ...) {
+    summary_info <- data %>%
+        drop_na() %>%
+        group_by(...) %>%
+        summarise(
+            n = n(),
+            across(where(is.numeric), ~mean(.x), .names="mean_{.col}"),
+            across(where(is.factor), ~n_distinct(.x), .names = "num_of_unique_{.col}")
+        )
+    
+    return(summary_info)
+}
+```
+
+```{r}
+summary_info = group_summary(penguins, species)
+
+print(summary_info, n = Inf, width = Inf)
+```
+
+
