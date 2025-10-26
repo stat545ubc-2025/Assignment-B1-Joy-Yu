@@ -31,6 +31,7 @@ Here’s the function:
 #' @return the summary result
 group_summary <- function(data, ...) {
 
+    # check if the input data is a data frame or tibble
     if (!is.data.frame(data)){
         stop("Input must be a data frame or tibble.")
     }
@@ -62,7 +63,7 @@ group_summary <- function(data, ...) {
 
 Below shows the examples of how to use the function with the dataset
 `penguins`. The first parameter is the data frame or table, and the
-others are the columns in the data.
+others are the columns in the data that you would like to group by with.
 
 ``` r
 summary_info = group_summary(penguins, species, island)

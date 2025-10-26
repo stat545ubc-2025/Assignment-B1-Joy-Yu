@@ -33,6 +33,7 @@ Here's the function:
 #' @return the summary result
 group_summary <- function(data, ...) {
 
+    # check if the input data is a data frame or tibble
     if (!is.data.frame(data)){
         stop("Input must be a data frame or tibble.")
     }
@@ -63,7 +64,7 @@ group_summary <- function(data, ...) {
 ## Examples
 
 Below shows the examples of how to use the function with the dataset `penguins`. The first parameter
-is the data frame or table, and the others are the columns in the data.
+is the data frame or table, and the others are the columns in the data that you would like to group by with.
 
 ```{r, message=FALSE}
 summary_info = group_summary(penguins, species, island)
@@ -78,13 +79,15 @@ return an error with an error message.
 ```{r, error=TRUE}
 penguin = c(1, 2, 3)
 
-summary_info = group_summary(penguin, spe)
+# penguin is not a data frame or tibble
+summary_info = group_summary(penguin, species)
 ```
 
 The third example shows if the input column doesn't exist in the dataset, the function will
 return an error with a corresponding error message.
 
 ```{r, error=TRUE}
+# spe doesn't exist in the data
 summary_info = group_summary(penguins, spe, island)
 ```
 
@@ -99,10 +102,10 @@ print(group_summary(penguins), n=Inf, width=Inf)
 
 Use `testthat` package to test the `group_summary` function.
 
-
 ```{r}
 test_that("group_summary function works well for different kinds of input", {
-    # example 1:
+    # example 1: test that the output is correct with no input columns
+    # creat the correct answer first
     penguins_removed_na <- penguins %>% drop_na()
     answer <- tibble(
         mean_bill_len = mean(penguins_removed_na$bill_len),
@@ -115,7 +118,6 @@ test_that("group_summary function works well for different kinds of input", {
         num_of_unique_sex = length(unique(penguins_removed_na$sex)),
         n = nrow(penguins_removed_na)
     )
-    print(answer, n=Inf, width=Inf)
     expect_equal(group_summary(penguins), answer)
 
     # example 2: test that the function runs into an error when the input is not
